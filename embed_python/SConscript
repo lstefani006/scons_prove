@@ -1,0 +1,34 @@
+import os, sys
+Import('*')
+
+name = 'embPython'
+
+lib = env.Clone()
+if opt.linux:
+    lib.ParseConfig("python2.7-config --cflags --ldflags")
+elif opt.win32:
+    lib.ParseConfig("python2.7-config --cflags --ldflags") # TODO
+
+lib.ExportEnv('EMBPYTHON_API')
+src = ['embPython.cpp']
+a = lib.SharedLibrary(name, src)
+a = lib.Install(opt.dirLib, a)
+lib.Default(a)
+lib = None
+
+###################################################
+imp = env.Clone()
+imp.ImportEnv('EMBPYTHON_API')
+imp.Append(CPPPATH=[imp.Dir('.')])
+imp.Append(LIBS=[name])
+###################################################
+
+exe = env.Clone()
+exe.MergeEnv(imp)
+src = ['emb_test.cpp']
+b = exe.Program('emb_test', src)
+b = exe.Install(opt.dirBin, b)
+exe.Default(b)
+
+###################################################
+Return('imp')

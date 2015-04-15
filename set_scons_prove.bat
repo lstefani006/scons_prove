@@ -1,0 +1,1 @@
+set BASE=%~dp0

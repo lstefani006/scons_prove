@@ -1,0 +1,32 @@
+import os, sys
+Import('*')
+
+name = 'sqlite3'
+
+lib = env.Clone()
+lib.ExportEnv('SQLITE_API')
+if opt.linux:
+    lib.AppendUnique(LIBS=['dl'])
+src = ['sqlite3.c']
+a = lib.SharedLibrary(name, src)
+a = lib.Install(opt.dirLib, a)
+lib.Default(a)
+
+###################################################
+
+imp = env.Clone()
+imp.ImportEnv('SQLITE_API')
+imp.Append(CPPPATH=[imp.Dir('.')])
+imp.Append(LIBS=[name])
+
+###################################################
+
+exe = env.Clone()
+exe.MergeEnv(imp)
+src = ['shell.c']
+b = exe.Program(name, src)
+b = exe.Install(opt.dirBin, b)
+exe.Default(b)
+
+###################################################
+Return('imp')

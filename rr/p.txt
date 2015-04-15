@@ -1,0 +1,27 @@
+
+class int {
+	fun __init__(self : int) : int;
+	fun __add__(a : int, b : int) : int;
+	fun __sub__(a : int, b : int) : int;
+
+	fun str(self : int) : String;
+
+	var a : int;
+
+	enum e {
+		a,
+		b,
+		c
+	}
+}
+
+
+fun c(a : System.os.decimal [], b : char) : int {
+	var c : int [] = 0;
+	if (var a = f(7))
+		b = a;
+	else {
+		b = "ciao";
+		c(1, 2);
+	}
+}

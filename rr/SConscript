@@ -1,0 +1,82 @@
+import os
+Import('*')
+
+#########################################3
+
+yy_nolines = False
+yy_debug = True
+
+bis = ['-d'] # genera il file .h/.hpp
+fle = []
+
+if yy_nolines:
+    bis.append(['--no-lines'])
+    fle.append(['-L'])
+
+if yy_debug:
+    bis.append(['-v', '-x'])   # -x report in xml, -v verbose
+
+exe = env.Clone()
+exe['LEXCOM'] = '$LEX $LEXFLAGS --outfile=$TARGET $SOURCES'
+exe.Append(CCFLAGS=['-std=c++11'])
+exe.AppendUnique(CCFLAGS=['-DYYDEBUG=1'])
+exe.CXXFile(source='rr.yy', target='rr_tab.cpp', YACCFLAGS=bis)
+exe.CXXFile(source='rr.ll', target='rr_lex.cpp', LEXFLAGS=fle)
+
+class obj(object):
+    def __init__(self, d):
+        for a, b in d.items():
+            if isinstance(b, (list, tuple)):
+                setattr(self, a, [obj(x) if isinstance(x, dict) else x for x in b])
+            else:
+                setattr(self, a, obj(b) if isinstance(b, dict) else b)
+
+
+
+exe.Command(target='EnumClassId.hpp', source='c.hpp', action='./mk_visitor.py enum         --fileout $TARGET $SOURCE Expr Stmt Type Decl')
+exe.Command(target='BaseVisitor.hpp', source='c.hpp', action='./mk_visitor.py base_visitor --fileout $TARGET $SOURCE Expr Stmt Type Decl')
+
+def build_vis(cc, f):
+    ss = './mk_visitor.py concrete_visitor --{6} --action "{0}" --targ "{1}" --varg "{2}" --tret "{3}" --vret "{4}" "{5}" --fileout $TARGET $SOURCE'.format(cc.action, cc.targ, cc.varg, cc.tret, cc.vret, cc.clss, f) 
+    return ss
+
+src = []
+if True:
+    cc = []
+    cc.append({'action':'Dump', 'targ':"int arg", 'varg':'arg', 'tret':"std::string", 'vret':'std::string()', 'clss':'Stmt'})
+    cc.append({'action':'Dump', 'targ':"int arg", 'varg':'arg', 'tret':"std::string", 'vret':'std::string()', 'clss':'Decl'})
+    cc.append({'action':'Dump', 'targ':"int arg", 'varg':'arg', 'tret':"std::string", 'vret':'std::string()', 'clss':'Type'})
+    cc.append({'action':'Dump', 'targ':"int arg", 'varg':'arg', 'tret':"std::string", 'vret':'std::string()', 'clss':'Expr'})
+    for d in cc:
+        c = obj(d)
+        hpp ='{0}_{1}Visitor.hpp'.format(c.action, c.clss)
+        cpp ='{0}_{1}Visitor.cpp'.format(c.action, c.clss)
+        exe.Command(target=hpp, source='c.hpp', action=build_vis(c, "hpp"))
+        exe.Command(target=cpp, source='c.hpp', action=build_vis(c, "cpp"))
+        exe.NoClean(cpp)
+        exe.Precious(cpp)
+        src.append(cpp)
+
+if True:
+    cc = []
+    cc.append({'action':'CheckType', 'targ':"Context *ctx", 'varg':'ctx', 'tret':"Type *", 'vret':'nullptr', 'clss':'Stmt'})
+    cc.append({'action':'CheckType', 'targ':"Context *ctx", 'varg':'ctx', 'tret':"Type *", 'vret':'nullptr', 'clss':'Decl'})
+    cc.append({'action':'CheckType', 'targ':"Context *ctx", 'varg':'ctx', 'tret':"Type *", 'vret':'nullptr', 'clss':'Type'})
+    cc.append({'action':'CheckType', 'targ':"Context *ctx", 'varg':'ctx', 'tret':"Type *", 'vret':'nullptr', 'clss':'Expr'})
+    for d in cc:
+        c = obj(d)
+        hpp ='{0}_{1}Visitor.hpp'.format(c.action, c.clss)
+        cpp ='{0}_{1}Visitor.cpp'.format(c.action, c.clss)
+        exe.Command(target=hpp, source='c.hpp', action=build_vis(c, "hpp"))
+        exe.Command(target=cpp, source='c.hpp', action=build_vis(c, "cpp"))
+        exe.NoClean(cpp)
+        exe.Precious(cpp)
+        src.append(cpp)
+
+rr_lex = exe.Object('rr_lex.cpp', CCFLAGS=exe['CCFLAGS'] + ['-Wno-deprecated-register'])
+src += ['main.cpp', 'rr_tab.cpp', 'c.cpp']
+a = exe.Program('rr', src + rr_lex)
+
+#a = exe.Install(opt.dirBin, [a])
+#exe.Default(a)
+

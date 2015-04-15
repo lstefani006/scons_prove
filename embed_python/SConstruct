@@ -1,0 +1,6 @@
+import os, sys
+sys.path.append(os.path.abspath(os.getenv('BASE')))
+import build_util
+Import('*')
+
+SConscript('SConscript', 'env  opt')

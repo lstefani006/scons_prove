@@ -1,0 +1,39 @@
+import os, sys
+Import('*')
+
+name = 'leakfinder'
+
+lib = env.Clone()
+lib.ExportEnv('LEAKFINDER_API')
+lib.Append(CCFLAGS=['-std=c++11'])
+lib.AppendUnique(LIBS=['dl'])
+src = ['leakfinder.cpp']
+a = lib.SharedLibrary(name, src)
+a = lib.Install(opt.dirLib, a)
+lib.Default(a)
+lib = None
+
+###################################################
+imp = env.Clone()
+imp.ImportEnv('LEAKFINDER_API')
+imp.AppendUnique(LIBS=['dl', 'pthread'])
+imp.Append(CPPPATH=[imp.Dir('.')])
+imp.Append(LIBS=[name])
+###################################################
+
+exe = env.Clone()
+#exe.MergeEnv(imp)
+src = ['leakfinder_test1.cpp']
+b = exe.Program('leakfinder_test1', src)
+#b = exe.Install(opt.dirBin, b)
+exe.Default(b)
+
+exe = env.Clone()
+exe.MergeEnv(imp)
+src = ['leakfinder_test2.cpp']
+b = exe.Program('leakfinder_test2', src)
+#b = exe.Install(opt.dirBin, b)
+exe.Default(b)
+
+###################################################
+Return('imp')
